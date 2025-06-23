@@ -1,4 +1,5 @@
-// offlineView.js - HANYA untuk rendering tampilan
+import { renderMap } from '../utils/map.js';
+
 export const showOfflineStories = (main, stories, onDelete) => {
   if (!stories || stories.length === 0) {
     main.innerHTML = `
@@ -7,6 +8,7 @@ export const showOfflineStories = (main, stories, onDelete) => {
         <div class="no-stories">
           <div class="no-stories-icon">📚</div>
           <p>Belum ada story yang disimpan offline</p>
+          <p>Silahkan refresh halaman ini atau kembali ke halaman cerita untuk menyimpan story.</p>
           <small>Story yang Anda simpan akan muncul di sini</small>
         </div>
       </div>
@@ -20,64 +22,61 @@ export const showOfflineStories = (main, stories, onDelete) => {
       <div class="stories-count">
         <span>${stories.length} story tersimpan</span>
       </div>
-      <div class="stories-grid">
+      <div class="stories-list">
         ${stories.map(story => `
           <div class="story-card">
             <div class="story-header">
               <h3>${story.name || 'Untitled Story'}</h3>
               <button data-id="${story.id}" class="delete-btn" title="Hapus Story">×</button>
             </div>
-            <div class="story-content">
-              <p class="story-description">${story.description || 'No description'}</p>
-              ${story.photoUrl ? `
-                <div class="story-image-container">
-                  <img src="${story.photoUrl}" alt="${story.name}" class="story-image" loading="lazy">
-                </div>
-              ` : ''}
-            </div>
+            <p class="story-description">${story.description || ''}</p>
+            ${story.photoUrl ? `
+              <div class="story-image-container">
+                <img src="${story.photoUrl}" alt="${story.name || 'Story Image'}" class="story-image" />
+              </div>
+            ` : ''}
             <div class="story-footer">
-              <small class="story-date">
-                💾 Disimpan: ${story.savedAt ? new Date(story.savedAt).toLocaleDateString('id-ID', {
-                  day: 'numeric',
-                  month: 'short',
-                  year: 'numeric',
-                  hour: '2-digit',
-                  minute: '2-digit'
-                }) : 'Unknown'}
-              </small>
+              <span class="story-date">Disimpan pada: ${new Date(story.savedAt).toLocaleString()}</span>
             </div>
+            <div class="story-map" id="map-${story.id}" style="height:220px;"></div>
           </div>
         `).join('')}
       </div>
     </div>
   `;
 
-  // Inject CSS styles
   injectOfflineStyles();
 
-  // Attach event listeners - tapi delegate ke presenter
+  // Pasang event listener tombol hapus
   document.querySelectorAll('.delete-btn').forEach(btn => {
     btn.addEventListener('click', async (e) => {
       e.preventDefault();
       e.stopPropagation();
-      
+
       const storyId = btn.dataset.id;
       const storyName = btn.closest('.story-card').querySelector('h3').textContent;
-      
-      // Konfirmasi delete
+
       if (confirm(`Apakah Anda yakin ingin menghapus story "${storyName}"?`)) {
-        // Set loading state
         btn.innerHTML = '⏳';
         btn.disabled = true;
-        
-        // Delegate ke presenter untuk handle delete
+
         if (onDelete) {
           await onDelete(storyId);
         }
       }
     });
   });
+
+  // Inisialisasi peta Leaflet dengan delay agar elemen sudah render sempurna
+  stories.forEach(story => {
+    if (story.lat && story.lon) {
+      requestAnimationFrame(() => {
+        renderMap(`map-${story.id}`, story.lat, story.lon, story.name, story.description);
+      });         
+    }
+  });
 };
+
 
 // Show loading state
 export const showLoadingState = (main) => {
@@ -190,20 +189,31 @@ const injectOfflineStyles = () => {
       opacity: 0.6;
     }
     
-    .stories-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-      gap: 24px;
-      margin-top: 20px;
+    .stories-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1.5rem;
+      justify-content: center;
+      padding: 1rem;
     }
-    
+
+    .story-card img {
+      width: 100%;
+      height: 180px;
+      object-fit: cover;
+      border-radius: 10px;
+    }
+
     .story-card {
-      background: white;
-      border: 1px solid #e9ecef;
-      border-radius: 12px;
-      padding: 20px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-      transition: all 0.3s ease;
+      background: var(--neutral);
+      border-radius: var(--radius);
+      padding: 1rem;
+      width: calc(33.333% - 1rem);
+      box-shadow: 0 2px 10px var(--shadow);
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      transition: var(--transition);
     }
     
     .story-card:hover {
@@ -275,17 +285,15 @@ const injectOfflineStyles = () => {
       overflow: hidden;
     }
     
-    .story-image {
-      width: 100%;
-      height: 180px;
-      object-fit: cover;
-      transition: transform 0.3s ease;
-    }
-    
     .story-footer {
       border-top: 1px solid #f1f3f4;
       padding-top: 12px;
       margin-top: 16px;
+    }
+
+    .story-map {
+      height: 220px;
+      width: 100%;
     }
     
     .story-date {
@@ -325,10 +333,17 @@ const injectOfflineStyles = () => {
     }
     
     @media (max-width: 768px) {
-      .offline-container { padding: 16px; }
-      .stories-grid { grid-template-columns: 1fr; gap: 16px; }
-      .story-card { padding: 16px; }
+    .stories-list {
+      gap: 16px;
     }
+    .story-card {
+      max-width: 100%;
+      padding: 16px;
+    }
+    .story-image {
+      height: 200px;
+    }
+  }
   `;
   
   document.head.appendChild(style);

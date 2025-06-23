@@ -50,6 +50,10 @@ module.exports = {
           noErrorOnMissing: true
         },
         {
+          from: 'assets',
+          to: 'assets'
+        },
+        {
           from: 'src',
           to: '',
           globOptions: {
@@ -71,7 +75,7 @@ module.exports = {
       directory: path.join(__dirname, 'dist'),
     },
     open: true,
-    port: 9008,
+    port: 9007,
     historyApiFallback: false,
     headers: {
       'Service-Worker-Allowed': '/',

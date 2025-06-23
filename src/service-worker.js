@@ -2,8 +2,6 @@ const CACHE_NAME = 'ceritaku-static-v1';
 const STATIC_ASSETS = [
   '/',
   '/index.html',
-  '/bundle.js',
-  '/style.css',
   '/manifest.json',
   // tambahkan lainnya jika perlu
 ];

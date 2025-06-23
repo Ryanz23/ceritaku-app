@@ -1,4 +1,6 @@
 // View daftar cerita dengan peta dan marker
+import { renderMap } from '../utils/map.js';
+
 export function storyListView(stories, { onArchive, onSave } = {}) {
   const section = document.createElement('section');
   section.className = 'story-list';
@@ -33,6 +35,7 @@ export function storyListView(stories, { onArchive, onSave } = {}) {
 
     if (onSave) {
       card.querySelector('.save-btn').onclick = () => {
+        saveStoryOffline(story);
         onSave(story);
       };
     }
@@ -41,16 +44,72 @@ export function storyListView(stories, { onArchive, onSave } = {}) {
   return section;
 }
 
-
-function renderMap(id, lat, lon, name, desc) {
-  if (!lat || !lon) return;
-  // Dua tile layer: OSM & MapTiler
-  const osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '© OSM' });
-  const maptiler = L.tileLayer('https://api.maptiler.com/maps/streets/{z}/{x}/{y}.png?key=GetYourOwnKey', { maxZoom: 19, attribution: '© MapTiler' });
-  const map = L.map(id, { zoomControl: false, attributionControl: false, layers: [osm] }).setView([lat, lon], 13);
-  const baseMaps = { 'OpenStreetMap': osm, 'MapTiler': maptiler };
-  L.control.layers(baseMaps).addTo(map);
-  const marker = L.marker([lat, lon]).addTo(map);
-  marker.bindPopup(`<b>${name}</b><br>${desc}`);
-  setTimeout(() => map.invalidateSize(), 200); // Pastikan map tampil penuh
+function saveStoryOffline(story) {
+  const savedStories = JSON.parse(localStorage.getItem('offlineStories')) || [];
+  const exists = savedStories.some(s => s.id === story.id);
+  
+  if (!exists) {
+    const storyWithSaveDate = { ...story, savedAt: new Date().toISOString() };
+    savedStories.push(storyWithSaveDate);
+    localStorage.setItem('offlineStories', JSON.stringify(savedStories));
+    
+    console.log('Memanggil showToast: Cerita berhasil disimpan offline!');
+    showToast('Cerita berhasil disimpan offline!');
+  } else {
+    console.log('Memanggil showToast: Cerita sudah tersimpan');
+    showToast('Cerita sudah tersimpan', 'error');
+  }
 }
+
+// Add this function at the bottom of storyListView.js
+function showToast(message, type = 'success') {
+  // Create toast container if it doesn't exist
+  let toastContainer = document.getElementById('toast-container');
+  if (!toastContainer) {
+    toastContainer = document.createElement('div');
+    toastContainer.id = 'toast-container';
+    toastContainer.style.cssText = `
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      z-index: 1000;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+    `;
+    document.body.appendChild(toastContainer);
+  }
+
+  // Create toast element
+  const toast = document.createElement('div');
+  toast.className = `toast ${type}`;
+  toast.textContent = message;
+  toast.style.cssText = `
+    margin-top: 10px;
+    padding: 12px 20px;
+    background: ${type === 'error' ? '#ff6b6b' : '#1dd1a1'};
+    color: white;
+    border-radius: 4px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    animation: fadeIn 0.3s;
+  `;
+
+  // Add CSS animation
+  const style = document.createElement('style');
+  style.textContent = `
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  `;
+  document.head.appendChild(style);
+
+  toastContainer.appendChild(toast);
+
+  // Auto-remove after 3 seconds
+  setTimeout(() => {
+    toast.style.opacity = '0';
+    setTimeout(() => toast.remove(), 300);
+  }, 3000);
+}
+
