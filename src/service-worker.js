@@ -1,9 +1,10 @@
 const CACHE_NAME = 'ceritaku-static-v1';
 const STATIC_ASSETS = [
   '/',
-  '/src/index.html',
-  '/src/manifest.json',
+  '/index.html',
+  '/manifest.json',
   // tambahkan lainnya jika perlu
+  '/assets/icon.png',
 ];
 
 self.addEventListener('install', (event) => {
