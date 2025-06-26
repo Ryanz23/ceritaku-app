@@ -1,7 +1,6 @@
 const path = require('path');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
-const WorkBoxPlugin = require('workbox-webpack-plugin');
-const CopyWebpackPlugin = require('copy-webpack-plugin');
+const CopyPlugin = require('copy-webpack-plugin');
 
 module.exports = {
   mode: 'development',
@@ -25,8 +24,26 @@ module.exports = {
     ],
   },
   plugins: [
-    new CopyWebpackPlugin({
+    new HtmlWebpackPlugin({
+      template: './src/index.html',
+      inject: 'body',
+      meta: {
+        viewport: 'width=device-width, initial-scale=1',
+        'theme-color': '#000000'
+      }
+    }),
+    new CopyPlugin({
       patterns: [
+        { 
+          from: 'src/service-worker.js', 
+          to: 'service-worker.js',
+          transform(content) {
+            return content.toString().replace(
+              /\/\* BUILD_TIME \*\//g,
+              `/* BUILD_TIME: ${Date.now()} */`
+            );
+          }
+        },
         { 
           from: 'src/manifest.json', 
           to: 'manifest.json',
@@ -40,55 +57,12 @@ module.exports = {
               '**/*.js', 
               '**/*.css', 
               '**/index.html',
+              '**/service-worker.js',
               '**/manifest.json'
             ]
           },
           noErrorOnMissing: true
         }
-      ],
-    }),
-    new HtmlWebpackPlugin({
-      template: './src/index.html',
-      inject: 'body',
-      meta: {
-        viewport: 'width=device-width, initial-scale=1',
-        'theme-color': '#000000'
-      }
-    }),
-    new WorkBoxPlugin.GenerateSW({
-      clientsClaim: true,
-      skipWaiting: true,
-      runtimeCaching: [
-        {
-          urlPattern: ({ request }) => request.destination === 'document' || request.destination === 'script' || request.destination === 'style',
-          handler: 'NetworkFirst',
-          options: {
-            cacheName: 'dynamic-cache',
-            expiration: {
-              maxEntries: 50,
-            },
-          },
-        },
-        {
-          urlPattern: ({ request }) => request.destination === 'image',
-          handler: 'CacheFirst',
-          options: {
-            cacheName: 'images-cache',
-            expiration: {
-              maxEntries: 60,
-            },
-          },
-        },
-        {
-          urlPattern: /manifest\.json$/,
-          handler: 'CacheFirst',
-          options: {
-            cacheName: 'manifest-cache',
-            expiration: {
-              maxEntries: 10,
-            },
-          },
-        },
       ],
     }),
   ],
