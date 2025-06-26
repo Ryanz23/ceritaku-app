@@ -7,31 +7,16 @@ const STATIC_ASSETS = [
 ];
 
 self.addEventListener('install', (event) => {
-  console.log('📦 Service Worker: Install event');
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(STATIC_ASSETS).catch((error) => {
-        console.error('Gagal men-cache assets:', error);
-      });
+      return cache.addAll(STATIC_ASSETS);
     })
   );
 });
 
-self.addEventListener('fetch', (event) => {
-  console.log('🔍 Fetch request:', event.request.url);
-  event.respondWith(
-    caches.match(event.request).then((cachedResponse) => {
-      if (cachedResponse) {
-        console.log('📦 Menggunakan cache untuk:', event.request.url);
-        return cachedResponse; // Kembalikan dari cache jika ada
-      }
-      console.log('🌐 Fetching dari jaringan:', event.request.url);
-      return fetch(event.request).catch((error) => {
-        console.error('❌ Gagal fetch:', error);
-        throw error; // Lempar error jika fetch gagal
-      });
-    })
-  );
+self.addEventListener('install', (event) => {
+  console.log('📦 Service Worker: Install event');
+  self.skipWaiting(); // langsung aktif
 });
 
 self.addEventListener('activate', (event) => {
