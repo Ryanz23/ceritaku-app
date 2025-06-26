@@ -27,7 +27,24 @@ module.exports = {
   plugins: [
     new CopyWebpackPlugin({
       patterns: [
-        { from: 'src/manifest.json', to: '' } // menyalin ke root output
+        { 
+          from: 'src/manifest.json', 
+          to: 'manifest.json',
+          noErrorOnMissing: true
+        },
+        {
+          from: 'src',
+          to: '',
+          globOptions: {
+            ignore: [
+              '**/*.js', 
+              '**/*.css', 
+              '**/index.html',
+              '**/manifest.json'
+            ]
+          },
+          noErrorOnMissing: true
+        }
       ],
     }),
     new HtmlWebpackPlugin({
