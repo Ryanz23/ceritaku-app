@@ -1,6 +1,6 @@
 const path = require('path');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
-const CopyPlugin = require('copy-webpack-plugin');
+const WorkBoxPlugin = require('workbox-webpack-plugin');
 
 module.exports = {
   mode: 'development',
@@ -32,41 +32,40 @@ module.exports = {
         'theme-color': '#000000'
       }
     }),
-    new CopyPlugin({
-      patterns: [
-        { 
-          from: 'src/service-worker.js', 
-          to: 'service-worker.js',
-          transform(content) {
-            return content.toString().replace(
-              /\/\* BUILD_TIME \*\//g,
-              `/* BUILD_TIME: ${Date.now()} */`
-            );
-          }
-        },
-        { 
-          from: 'src/manifest.json', 
-          to: 'manifest.json',
-          noErrorOnMissing: true
-        },
+    new WorkBoxPlugin.GenerateSW({
+      clientsClaim: true,
+      skipWaiting: true,
+      runtimeCaching: [
         {
-          from: 'assets',
-          to: 'assets'
-        },
-        {
-          from: 'src',
-          to: '',
-          globOptions: {
-            ignore: [
-              '**/*.js', 
-              '**/*.css', 
-              '**/index.html',
-              '**/service-worker.js',
-              '**/manifest.json'
-            ]
+          urlPattern: ({ request }) => request.destination === 'document' || request.destination === 'script' || request.destination === 'style',
+          handler: 'NetworkFirst',
+          options: {
+            cacheName: 'dynamic-cache',
+            expiration: {
+              maxEntries: 50,
+            },
           },
-          noErrorOnMissing: true
-        }
+        },
+        {
+          urlPattern: ({ request }) => request.destination === 'image',
+          handler: 'CacheFirst',
+          options: {
+            cacheName: 'images-cache',
+            expiration: {
+              maxEntries: 60,
+            },
+          },
+        },
+        {
+          urlPattern: /manifest\.json$/,
+          handler: 'CacheFirst',
+          options: {
+            cacheName: 'manifest-cache',
+            expiration: {
+              maxEntries: 10,
+            },
+          },
+        },
       ],
     }),
   ],

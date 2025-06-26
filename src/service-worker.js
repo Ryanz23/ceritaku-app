@@ -1,22 +1,37 @@
 const CACHE_NAME = 'ceritaku-static-v1';
 const STATIC_ASSETS = [
   '/',
-  '/index.html',
-  '/manifest.json',
+  '/src/index.html',
+  '/src/manifest.json',
   // tambahkan lainnya jika perlu
 ];
 
 self.addEventListener('install', (event) => {
+  console.log('📦 Service Worker: Install event');
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(STATIC_ASSETS);
+      return cache.addAll(STATIC_ASSETS).catch((error) => {
+        console.error('Gagal men-cache assets:', error);
+      });
     })
   );
 });
 
-self.addEventListener('install', (event) => {
-  console.log('📦 Service Worker: Install event');
-  self.skipWaiting(); // langsung aktif
+self.addEventListener('fetch', (event) => {
+  console.log('🔍 Fetch request:', event.request.url);
+  event.respondWith(
+    caches.match(event.request).then((cachedResponse) => {
+      if (cachedResponse) {
+        console.log('📦 Menggunakan cache untuk:', event.request.url);
+        return cachedResponse; // Kembalikan dari cache jika ada
+      }
+      console.log('🌐 Fetching dari jaringan:', event.request.url);
+      return fetch(event.request).catch((error) => {
+        console.error('❌ Gagal fetch:', error);
+        throw error; // Lempar error jika fetch gagal
+      });
+    })
+  );
 });
 
 self.addEventListener('activate', (event) => {
