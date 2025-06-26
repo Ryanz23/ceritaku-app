@@ -3,8 +3,9 @@ const STATIC_ASSETS = [
   '/',
   '/index.html',
   '/manifest.json',
+  '/bundle.js',
   // tambahkan lainnya jika perlu
-  '/assets/icon.png',
+  '/style.css',
 ];
 
 self.addEventListener('install', (event) => {
