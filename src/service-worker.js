@@ -1,3 +1,5 @@
+import { precacheAndRoute } from 'workbox-precaching';
+precacheAndRoute(self.__WB_MANIFEST);
 const CACHE_NAME = 'ceritaku-static-v1';
 const STATIC_ASSETS = [
   '/',
@@ -9,6 +11,8 @@ const STATIC_ASSETS = [
 ];
 
 self.addEventListener('install', (event) => {
+  console.log('📦 Service Worker: Install event');
+  self.skipWaiting();
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
       return cache.addAll(STATIC_ASSETS);

@@ -1,6 +1,7 @@
 const path = require('path');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const CopyPlugin = require('copy-webpack-plugin');
+const { InjectManifest } = require('workbox-webpack-plugin');
 
 module.exports = {
   mode: 'development',
@@ -24,6 +25,10 @@ module.exports = {
     ],
   },
   plugins: [
+    new InjectManifest({
+      swSrc: './src/sw.js', // file service worker Anda
+      swDest: 'service-worker.js', // file output yang di-deploy
+    }),
     new HtmlWebpackPlugin({
       template: './src/index.html',
       inject: 'body',
