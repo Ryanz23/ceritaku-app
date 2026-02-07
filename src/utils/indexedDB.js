@@ -63,19 +63,19 @@ export const getAllStories = async () => {
 export const getOfflineStories = async () => {
   try {
     const db = await dbPromise;
-    const tx = db.transaction(STORE_NAME, 'readonly');
-    const store = tx.objectStore(STORE_NAME);
-    const index = store.index('isOffline');
+    const stories = await db.getAll(STORE_NAME); // Ambil semua data
     
-    const stories = await index.getAll(true); // Ambil yang isOffline = true
+    // Filter stories yang isOffline === true secara manual
+    const offlineStories = stories.filter(story => story.isOffline === true);
     
     // Sort berdasarkan waktu tersimpan (terbaru dulu)
-    return stories.sort((a, b) => new Date(b.savedAt) - new Date(a.savedAt));
+    return offlineStories.sort((a, b) => new Date(b.savedAt) - new Date(a.savedAt));
   } catch (error) {
     console.error('Error getting offline stories:', error);
     return [];
   }
 };
+
 
 // Ambil stories dari API (untuk cache)
 export const getApiStories = async () => {

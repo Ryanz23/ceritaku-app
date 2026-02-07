@@ -5,7 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>CeritaKu</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
-  <link rel="manifest" href="manifest.json" />
+  <link rel="manifest" href="/manifest.json" />
+  <link rel="icon" href="assets/icon.png" type="image/png" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
   <meta name="theme-color" content="#317EFB" />
 
@@ -22,6 +23,9 @@
         <li><a href="#/register"> Register</a></li>
         <li><a href="#/saved">Cerita Offline</a></li>
       </ul>
+      <button id="install-button" style="display:none; position: fixed; bottom: 20px; right: 20px; z-index: 1000;">
+        Install CeritaKu
+      </button>      
     </nav>
   </header>
   <main id="main-content" tabindex="-1" aria-label="Konten utama"></main>
